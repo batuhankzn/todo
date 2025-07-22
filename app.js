@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 
@@ -9,9 +10,15 @@ const app = express();
 
 
 const todoRoutes = require("./routes/todo");
+const userRoutes = require("./routes/User");
+
+const verifyToken = require("./middlewares/verifyToken");
+
 
 app.use(express.json());
+app.use(cookieParser());
 app.use("/", todoRoutes);
+app.use("/", userRoutes);
 
 const uri = process.env.MONGO_URI;
 

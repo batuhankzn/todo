@@ -1,30 +1,46 @@
 const express = require("express");
 const router = express.Router();
 const Todo = require("../schemas/Todo");
+const verifyToken = require("../middlewares/verifyToken");
 
-router.get("/get", async (req, res) => {
-    const todos = await Todo.find();
+// Tüm todoları sadece giriş yapan kullanıcıya göre getir
+router.get("/get", verifyToken, async (req, res) => {
+    const todos = await Todo.find({ user: req.user.userId });
     res.json(todos);
 });
 
-router.get("/get/:id", async (req, res) => {
-    const todo = await Todo.findById(req.params.id);
+// Belirli bir todo'yu sadece sahibi görebilir
+router.get("/get/:id", verifyToken, async (req, res) => {
+    const todo = await Todo.findOne({ _id: req.params.id, user: req.user.userId });
+    if (!todo) return res.status(404).json({ message: "Todo bulunamadı" });
     res.json(todo);
 });
 
-router.post("/create", async (req, res) => {
-    const todo = new Todo(req.body);
+// Yeni todo eklerken user bilgisini ekle
+router.post("/create", verifyToken, async (req, res) => {
+    const todo = new Todo({
+        ...req.body,
+        user: req.user.userId
+    });
     await todo.save();
     res.json(todo);
 });
 
-router.patch("/update/:id", async (req, res) => {
-    const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+// Sadece kendi todo'sunu güncelleyebilir
+router.patch("/update/:id", verifyToken, async (req, res) => {
+    const todo = await Todo.findOneAndUpdate(
+        { _id: req.params.id, user: req.user.userId },
+        req.body,
+        { new: true }
+    );
+    if (!todo) return res.status(404).json({ message: "Todo bulunamadı veya yetkiniz yok" });
     res.json(todo);
 });
 
-router.delete("/delete/:id", async (req, res) => {
-    const todo = await Todo.findByIdAndDelete(req.params.id);
+// Sadece kendi todo'sunu silebilir
+router.delete("/delete/:id", verifyToken, async (req, res) => {
+    const todo = await Todo.findOneAndDelete({ _id: req.params.id, user: req.user.userId });
+    if (!todo) return res.status(404).json({ message: "Todo bulunamadı veya yetkiniz yok" });
     res.json(todo);
 });
 
