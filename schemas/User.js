@@ -16,10 +16,28 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    role: {
+        type: String,
+        enum: ["admin", "user"],
+        default: "user",
+    },
+    isVerifiedMail: {
+        type: Boolean,
+        default: false,
+    },
+    verifyMailCode: {
+        type: String,
+        default: null,
+    },
+    verifyMailCodeExpire: {
+        type: Date,
+        default: null,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
-    }
+    },
+
 },
     { versionKey: false }
 );
